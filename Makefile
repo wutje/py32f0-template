@@ -33,6 +33,8 @@ FLASH_PROGRM	?= pyocd
 #ARM_TOOCHAIN	?= /opt/gcc-arm/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin
 ARM_TOOCHAIN	?= /opt/gcc-arm/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin
 
+PREFIX = arm-none-eabi-
+
 # path to JLinkExe
 JLINKEXE		?= /opt/SEGGER/JLink/JLinkExe
 # path to PyOCD
