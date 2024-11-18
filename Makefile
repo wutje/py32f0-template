@@ -56,7 +56,7 @@ AFILES		:=
 # Include paths
 INCLUDES	:= Libraries/CMSIS/Core/Include \
 			Libraries/CMSIS/Device/PY32F0xx/Include \
-			User
+			$(CDIRS)
 
 ##### Library Paths ############
 
