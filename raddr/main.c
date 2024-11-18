@@ -1,7 +1,9 @@
 //PLAN: hook up switch to irq, toggle led
 
 #include "py32f0xx_bsp_clock.h"
-#include "py32f0xx_hal_exti.h"
+
+#include "wolf.h"
+#include "pack.h"
 
 /*  A wolf is:
  *  PA1 = switch (Pin 7)
@@ -33,22 +35,40 @@ static void cfg_gpio(void)
 {
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    cfg_pin(SWC_PIN,     GPIO_MODE_IT_FALLING, GPIO_PULLUP);
-    cfg_pin(KEY_IN_PIN,  GPIO_MODE_INPUT,      GPIO_PULLUP);
+    cfg_pin(SWC_PIN,     GPIO_MODE_INPUT,      GPIO_PULLUP);
+    cfg_pin(KEY_IN_PIN,  GPIO_MODE_IT_FALLING, GPIO_PULLUP);
     cfg_pin(KEY_OUT_PIN, GPIO_MODE_OUTPUT_PP,  GPIO_NOPULL);
 
     /* EXTI interrupt init*/
-    HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+    HAL_NVIC_SetPriority(EXTI2_3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
 }
-
-void EXTI0_1_IRQHandler(void)
+void gpio_set(int bit)
 {
-    GPIO_PinState switch_in;
-    switch_in = HAL_GPIO_ReadPin(GPIOA, SWC_PIN);
-    HAL_GPIO_WritePin(GPIOA, KEY_OUT_PIN, switch_in);
+    HAL_GPIO_WritePin(GPIOA, KEY_OUT_PIN, bit);
 }
 
+void sleep_ns(int delay)
+{
+    HAL_Delay(delay); //TODO these are ms
+}
+
+int gpio_get(void)
+{
+    return HAL_GPIO_ReadPin(GPIOA, KEY_IN_PIN);
+}
+
+bool SOME_INPUT[K] = {0,0,0,0, 0,0,0,0};
+
+void update_input(void)
+{
+    SOME_INPUT[0] = HAL_GPIO_ReadPin(GPIOA, SWC_PIN);
+}
+
+void EXTI2_3_IRQHandler(void)
+{
+    interrupt_rising();
+}
 
 int main(void)
 {
@@ -56,19 +76,5 @@ int main(void)
     BSP_HSI_24MHzClockConfig();
     cfg_gpio();
 
-    GPIO_PinState switch_in, key_in, key_out;
-
     while (1);
-    if(0){
-        /*// Inverteer alle inputs zodat ik mijn logica blijf snappen*/
-        /*switch_in = !HAL_GPIO_ReadPin(GPIOA, SWC_PIN);*/
-        /*key_in    = !HAL_GPIO_ReadPin(GPIOA, KEY_IN_PIN);*/
-
-        /*[>key_out = switch_in | key_in;<]*/
-        /*key_out = switch_in;*/
-
-        /*// Inverteer alle outputs zodat ik mijn logica blijf snappen*/
-        /*// (ledje hangt tussen vcc en key_out)*/
-        /*HAL_GPIO_WritePin(GPIOA, KEY_OUT_PIN, !key_out);*/
-    }
 }
