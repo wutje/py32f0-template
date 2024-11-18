@@ -45,13 +45,13 @@ DEBUG_FLAGS ?= -gdwarf-3
 
 OPT			?= -Og
 # C flags
-TGT_CFLAGS		?= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -std=c17 $(addprefix -D, $(LIB_FLAGS)) -Wall -ffunction-sections -fdata-sections
+TGT_CFLAGS	?= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -std=c17 $(addprefix -D, $(LIB_FLAGS)) -Wall -ffunction-sections -fdata-sections
 # C++ flags
 TGT_CPPFLAGS	?= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -std=c++11 $(addprefix -D, $(LIB_FLAGS)) -Wall -ffunction-sections -fdata-sections
 # ASM flags
-TGT_ASFLAGS		?= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -Wa,--warn
+TGT_ASFLAGS	?= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -Wa,--warn
 # LD flags
-TGT_LDFLAGS		?= $(ARCH_FLAGS) -specs=nano.specs -specs=nosys.specs -static -lc -lm \
+TGT_LDFLAGS	?= $(ARCH_FLAGS) -specs=nano.specs -specs=nosys.specs -lc -lm \
 				-Wl,-Map=$(BDIR)/$(PROJECT).map \
 				-Wl,--gc-sections \
 				-Wl,--print-memory-usage
