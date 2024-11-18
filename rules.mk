@@ -6,13 +6,13 @@ NULL	:= 2>/dev/null
 endif
 
 PREFIX		?= $(ARM_TOOCHAIN)/arm-none-eabi-
-CC			= $(PREFIX)gcc
-XX			= $(PREFIX)g++
-AS			= $(PREFIX)as
-LD			= $(PREFIX)ld
+CC		= $(PREFIX)gcc
+XX		= $(PREFIX)g++
+AS		= $(PREFIX)as
+LD		= $(PREFIX)ld
 OBJCOPY		= $(PREFIX)objcopy
 # `$(shell pwd)` or `.`, both works
-TOP			= .
+TOP		= .
 BDIR		= $(TOP)/$(BUILD_DIR)
 
 # For each direcotry, add it to csources
@@ -43,7 +43,7 @@ ARCH_FLAGS	:= -mcpu=cortex-m0plus
 #  -gdwarf: in DWARF format, -gdwarf-2,-gdwarf-3,-gdwarf-4,-gdwarf-5
 DEBUG_FLAGS ?= -gdwarf-3
 
-OPT			?= -Og
+OPT		?= -Os
 # C flags
 TGT_CFLAGS	?= $(ARCH_FLAGS) $(DEBUG_FLAGS) $(OPT) -std=c17 $(addprefix -D, $(LIB_FLAGS)) -Wall -ffunction-sections -fdata-sections
 # C++ flags
