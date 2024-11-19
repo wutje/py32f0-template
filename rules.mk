@@ -135,3 +135,6 @@ else ifeq ($(FLASH_PROGRM),pyocd)
 else
 	@echo "FLASH_PROGRM is invalid\n"
 endif
+
+cscope:
+	cscope -b $(addprefix -s , $(CDIRS)) $(addprefix -s , $(INCLUDES))
