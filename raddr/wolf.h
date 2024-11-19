@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 
-#define T0L 850
-#define T0H 400
-#define T1L 450
-#define T1H 800
+#define T0L 85
+#define T0H 40
+#define T1L 45
+#define T1H 80
 
 #define K 8
 
@@ -38,7 +38,7 @@ static inline void bark(int bit)
 static inline void bark_full(int bit)
 {
     bark(bit);
-    sleep_ns(bit?T0L:T1L); //wait low time of bit
+    sleep_ns(bit?T1L:T0L); //wait low time of bit
 }
 
 #endif
