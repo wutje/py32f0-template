@@ -14,17 +14,18 @@ void statemachine(int bit)
         case S_REST:
             if (bit == GROWL) { //growl
                 state = S_ALERT;
-                bark_full(GROWL); //wake up next with growl
+                bark(GROWL); //wake up next with growl
             } else {
                 /* a BARK makes no sense here. Therefor just absorb it */
             }
             break; //Wait for next bit
         case S_ALERT:
-            bark_full(BARK); //Yelp, so next will copy next frame
             if (!bit) {
+                bark(BARK); //Yelp, so next will copy next frame
                 state = S_BARK; //
                 break; //Wait for next bit
             }
+            bark_full(BARK); //Yelp, so next will copy next frame
             update_input();
             for (int k=0; k<K; k++) {
                 bark_full(SOME_INPUT[k]);
@@ -36,11 +37,11 @@ void statemachine(int bit)
         case S_HOWL:
             //Maybe include parity bit?
             bark_full(GROWL); //wake up next with growl
-            bark_full(HOWL); //Howl, so next will also go to S_HOWL
+            bark(HOWL); //Howl, so next will also go to S_HOWL
             state = S_REST; //we are the last. Get some rest.
             break; //Wait for next bit
         case S_BARK:
-            bark_full(bit); //Copy input to output
+            bark(bit); //Copy input to output
             if (!--bark_i) {
                 state = S_ALERT;
                 bark_i = K;
@@ -50,7 +51,7 @@ void statemachine(int bit)
     }
 }
 
-void interrupt_rising()
+void receive_bit()
 {
     sleep_ns((T0H+T1H)/2);
     int bit = gpio_get();

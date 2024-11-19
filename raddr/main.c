@@ -21,7 +21,7 @@
 #define KEY_OUT_PIN GPIO_PIN_4
 
 // if parent send dataframes continuously to trigger child
-#define PARENT 1
+#define PARENT 0
 
 void cfg_pin(uint32_t pin, uint32_t mode, uint32_t pull)
 {
@@ -83,7 +83,9 @@ void EXTI2_3_IRQHandler(void)
 {
     if (!PARENT) {
         //trigger statemachine
-        interrupt_rising();
+        receive_bit();
+        /*int a = HAL_GPIO_ReadPin(GPIOA, KEY_IN_PIN);*/
+        /*HAL_GPIO_WritePin(GPIOA, KEY_OUT_PIN, a);*/
     }
     __HAL_GPIO_EXTI_CLEAR_IT(KEY_IN_PIN);
 }
