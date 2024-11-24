@@ -3,6 +3,7 @@
 #include "clk_config.h"
 
 #include "uid.h"
+#include "output_timer.h"
 #include "wolf.h"
 #include "pack.h"
 
@@ -111,6 +112,8 @@ int main(void)
         extern void initialise_monitor_handles();
         initialise_monitor_handles();
         printf("PY32F0xx\r\nSystem Clock: %ld\r\n", SystemCoreClock);
+        printf("HSI Clock: %ld, divider %ld\r\n", HSI_VALUE, TIMER_DIVIDER);
+        printf("1ms: %d, 500us %d\r\n", us_to_timer_tick(1000), us_to_timer_tick(500));
         uid_print();
     }
 #endif
@@ -131,7 +134,22 @@ int main(void)
     }
 
     while (1) {
-        if (!data_ready) continue;
+        if (1 || !data_ready) {
+            void debug_print(void);
+            debug_print();
+            HAL_Delay(1000);
+            fifo_write(1, us_to_timer_tick(1 * 1000));
+            //fifo_write(0, us_to_timer_tick(1 * 1000));
+            //fifo_write(1, us_to_timer_tick(3 * 1000));
+            //fifo_write(0, us_to_timer_tick(1 * 1000));
+            //fifo_write(1, us_to_timer_tick(5 * 1000));
+            //fifo_write(0, us_to_timer_tick(1 * 1000));
+            //fifo_write(1, us_to_timer_tick(7 * 1000));
+            //fifo_write(0, us_to_timer_tick(1 * 1000));
+            //fifo_write(1, us_to_timer_tick(9 * 1000));
+            //HAL_GPIO_TogglePin(GPIOA, KEY_OUT_PIN);
+            continue;
+        }
 
         sleep_ns((T0H+T1H)/2);
         int bit = gpio_get();
