@@ -65,9 +65,8 @@ static uint32_t fifo_read(void)
 //TODO rename this function to bark_add or something
 void fifo_write(bool bit, uint16_t tmo)
 {
-    printf("Adding tot %d %d @%d\r\n", bit, tmo, fifo.write);
     if (fifo_is_full()) {
-        printf("Fifo full!\r\n");
+        //printf("Fifo full!\r\n");
         return; //Drop it, sorry. Programmer error
     }
 
@@ -82,7 +81,6 @@ void fifo_write(bool bit, uint16_t tmo)
         TIM16->EGR = TIM_EGR_UG;
         __HAL_TIM_ENABLE_IT(&TimHandle, TIM_DIER_UIE);
         //__HAL_TIM_ENABLE_IT(&TimHandle, TIM_IT_UPDATE);
-        printf("Enable ISR %ld %ld\r\n", TIM16->DIER, TIM16->CR1);
     }
 }
 
@@ -95,20 +93,18 @@ void TIM16_IRQHandler(void)
      *
      * That means no crappy bloated HAL code here!
      * Just old skool register writing */
-    cnt++;
 
     if(fifo_is_empty()) {
         //TODO Always off or on if no bit available? What is the 'rest' state?
         GPIOA->BRR = LED_PIN;
-        /* Disable the interrupt, to force not getting here again and signal to the write we are done */
+        /* Disable the interrupt, to force not getting here again and signal to the writer we are done */
         TIM16->DIER = 0;
         return;
     }
     uint32_t t = fifo_read();
-    uint32_t tmo = t & 0xFFFF; //TODO MEGA hack, just write all 32 bit to ARR. Only lower 16 bit are ever used. Saves us a bit manipulation
+    uint32_t tmo = t; //MEGA hack, just write all 32 bit to ARR.
     uint32_t bit = !!(t & 1u<<31);
 
-    /* Write output TODO findout if conditional shift + only writing BSRR is less ASM */
     if (bit) {
         /* BSRR => Bit Set Reset Register. Write 1 to set I/O */
         GPIOA->BSRR = LED_PIN;
@@ -119,6 +115,11 @@ void TIM16_IRQHandler(void)
 
     /* Update reload register with new timeout */
     TIM16->ARR = tmo;
+
+    /* Reload timer to force pickup new ARR. */
+    /* TODO find a better solution for this.
+     * This does ensure the pulse is at least as long as specified. */
+    TIM16->EGR = TIM_EGR_UG;
 
     /* Clear our interrupt flag */
     TIM16->SR = ~TIM_IT_UPDATE;
