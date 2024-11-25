@@ -33,32 +33,35 @@ static TIM_HandleTypeDef TimHandle = {
 
 #define FIFO_SIZE 16 //Must be a power of 2
 
-_Static_assert(FIFO_SIZE > K, "FIFO_SIZE needs to be able to contain at least a full K of barks");
+_Static_assert(FIFO_SIZE > 2*K, "FIFO_SIZE needs to be able to contain at least a full K of barks");
 _Static_assert((FIFO_SIZE & (FIFO_SIZE - 1)) == 0 , "FIFO_SIZE needs to be a power of 2 to make access FAST");
 
 /* TODO should we convert to use a size?
  * That is easier and might faster to check */
 static struct {
-    volatile int write; //points to empty spot
-    volatile int read; //point to spot that should be read
+    int write;
+    int read;
+    volatile uint32_t size;
     uint32_t buf[FIFO_SIZE];
-} fifo = {.write = 1, .read = 0};
+} fifo;
 
 static bool fifo_is_empty(void)
 {
-    /* No need to check for % FIFO_SIZE.
-     * We assume we do not write if fifo is full */
-    return (fifo.read + 1) == fifo.write;
+    return fifo.size == 0;
 }
 
 static bool fifo_is_full(void)
 {
-    return fifo.read %FIFO_SIZE == fifo.write %FIFO_SIZE;
+    return fifo.size >= FIFO_SIZE;
 }
 
 static uint32_t fifo_read(void)
 {
-    return fifo.buf[++fifo.read % FIFO_SIZE];
+    uint32_t idx = fifo.read;
+    uint32_t d = fifo.buf[idx];
+    fifo.read = (idx + 1) % FIFO_SIZE;
+    fifo.size--;
+    return d;
 }
 
 /* Supports a single writer only! */
@@ -72,12 +75,12 @@ void fifo_write(bool bit, uint16_t tmo)
 
     uint32_t d = tmo | bit << 31;
 
-    fifo.buf[fifo.write % ARRAY_SIZE(fifo.buf)] = d;
-    fifo.write++;
+    fifo.buf[fifo.write] = d;
+    fifo.write = (fifo.write + 1) % FIFO_SIZE;
+    fifo.size++;
     /* If ISR not enabled the code is not running. Start it*/
     if (__HAL_TIM_GET_IT_SOURCE(&TimHandle, TIM_IT_UPDATE) == RESET) {
-        /* Generate event to RESET ALL counter values.
-         * This is need to get accurate timing for the first bit. */
+        /* Generate event to trigger this ISR */
         TIM16->EGR = TIM_EGR_UG;
         __HAL_TIM_ENABLE_IT(&TimHandle, TIM_DIER_UIE);
         //__HAL_TIM_ENABLE_IT(&TimHandle, TIM_IT_UPDATE);
@@ -85,6 +88,11 @@ void fifo_write(bool bit, uint16_t tmo)
 }
 
 static int cnt = 0;
+void debug_print(void)
+{
+    printf("Cnt %d / %ld\r\n", cnt, TIM16->CNT);
+}
+
 
 void TIM16_IRQHandler(void)
 {
@@ -96,7 +104,8 @@ void TIM16_IRQHandler(void)
 
     if(fifo_is_empty()) {
         //TODO Always off or on if no bit available? What is the 'rest' state?
-        GPIOA->BRR = LED_PIN;
+        GPIOA->BSRR = LED_PIN << 16;
+        //GPIOA->BRR = 16;
         /* Disable the interrupt, to force not getting here again and signal to the writer we are done */
         TIM16->DIER = 0;
         return;
@@ -105,7 +114,10 @@ void TIM16_IRQHandler(void)
     uint32_t tmo = t; //MEGA hack, just write all 32 bit to ARR.
     uint32_t bit = !!(t & 1u<<31);
 
-    if (bit) {
+    if (1) {
+        GPIOA->BSRR = bit ? LED_PIN : LED_PIN << 16;
+    }
+    else if (bit) {
         /* BSRR => Bit Set Reset Register. Write 1 to set I/O */
         GPIOA->BSRR = LED_PIN;
     } else {
@@ -121,13 +133,8 @@ void TIM16_IRQHandler(void)
      * This does ensure the pulse is at least as long as specified. */
     TIM16->EGR = TIM_EGR_UG;
 
-    /* Clear our interrupt flag */
+    /* Acknowledge the interrupt */
     TIM16->SR = ~TIM_IT_UPDATE;
-}
-
-void debug_print(void)
-{
-    printf("Cnt %d / %ld\r\n", cnt, TIM16->CNT);
 }
 
 void raddr_output_init(void)
