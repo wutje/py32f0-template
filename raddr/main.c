@@ -113,12 +113,13 @@ int main(void)
         initialise_monitor_handles();
         printf("PY32F0xx\r\nSystem Clock: %ld\r\n", SystemCoreClock);
         printf("HSI Clock: %ld, divider %ld\r\n", HSI_VALUE, TIMER_DIVIDER);
-        printf("1ms: %d, 500us %d\r\n", us_to_timer_tick(1000), us_to_timer_tick(500));
+        printf("100us: %d, 10us %d\r\n", us_to_timer_tick(100), us_to_timer_tick(10));
         uid_print();
     }
 #endif
 
     cfg_gpio();
+    raddr_output_init();
 
     uint32_t t_last_call = 0;
 
@@ -134,20 +135,14 @@ int main(void)
     }
 
     while (1) {
-        if (1 || !data_ready) {
-            void debug_print(void);
-            debug_print();
+        if (!data_ready) {
             HAL_Delay(1000);
-            fifo_write(1, us_to_timer_tick(1 * 1000));
-            //fifo_write(0, us_to_timer_tick(1 * 1000));
-            //fifo_write(1, us_to_timer_tick(3 * 1000));
-            //fifo_write(0, us_to_timer_tick(1 * 1000));
-            //fifo_write(1, us_to_timer_tick(5 * 1000));
-            //fifo_write(0, us_to_timer_tick(1 * 1000));
-            //fifo_write(1, us_to_timer_tick(7 * 1000));
-            //fifo_write(0, us_to_timer_tick(1 * 1000));
-            //fifo_write(1, us_to_timer_tick(9 * 1000));
-            //HAL_GPIO_TogglePin(GPIOA, KEY_OUT_PIN);
+            uint16_t t = us_to_timer_tick(100);
+            for (int i = 0; i < 16/2; i++)
+            {
+                fifo_write(1, 2 * t);
+                fifo_write(0, 1 * t);
+            }
             continue;
         }
 
