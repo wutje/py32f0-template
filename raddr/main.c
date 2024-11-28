@@ -113,8 +113,6 @@ int main(void)
         extern void initialise_monitor_handles();
         initialise_monitor_handles();
         printf("PY32F0xx\r\nSystem Clock: %ld\r\n", SystemCoreClock);
-        printf("HSI Clock: %ld, divider %ld\r\n", HSI_VALUE, TIMER_DIVIDER);
-        printf("100us: %d, 10us %d\r\n", us_to_timer_tick(100), us_to_timer_tick(1));
         uid_print();
     }
 #endif
@@ -137,15 +135,7 @@ int main(void)
 
     while (1) {
         if (!data_ready) {
-#if 1 || defined(DBG)
-            HAL_Delay(1000);
-            uint16_t t = us_to_timer_tick(10);
-            for (int i = 0; i < 16/2; i++)
-            {
-                raddr_output_schedule(1, t);
-                raddr_output_schedule(0, t);
-            }
-#endif
+            raddr_output_debug();
             continue;
         }
 
